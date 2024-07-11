@@ -1,4 +1,4 @@
-package com.planner.planner.participants;
+package com.planner.planner.participant;
 
 
 import com.planner.planner.trip.Trip;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Participants {
+public class Participant {
 
     @Id
     @GeneratedValue
@@ -36,5 +36,12 @@ public class Participants {
     @ManyToOne
     @JoinColumn(name = "trip_id", nullable = false)
     private Trip trip;
+
+    public Participant(String email, Trip trip) {
+        this.email = email;
+        this.trip = trip;
+        this.isConfirmed = false;
+        this.name = "";
+    }
 
 }
