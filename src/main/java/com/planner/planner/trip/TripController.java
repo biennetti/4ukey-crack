@@ -1,6 +1,14 @@
 package com.planner.planner.trip;
 
 
+import com.planner.planner.activity.ActivityData;
+import com.planner.planner.activity.ActivityRequestPayload;
+import com.planner.planner.activity.ActivityResponse;
+import com.planner.planner.activity.ActivityService;
+import com.planner.planner.link.LinkData;
+import com.planner.planner.link.LinkRequestPayload;
+import com.planner.planner.link.LinkResponse;
+import com.planner.planner.link.LinkService;
 import com.planner.planner.participant.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -8,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,10 +26,14 @@ public class TripController {
 
     @Autowired
     private ParticipantService participantService;
-
     @Autowired
     private TripRepository repository;
+    @Autowired
+    private ActivityService activityService;
+    @Autowired
+    private LinkService linkService;
 
+    // VIAGENS
 
     @PostMapping
     public ResponseEntity<TripCreateResponse> createTrip(@RequestBody TripRequestPayload payload) {
@@ -37,10 +48,7 @@ public class TripController {
     @GetMapping("/{id}")
     public ResponseEntity<Trip> getTripDetails(@PathVariable UUID id) {
         Optional<Trip> trip = this.repository.findById(id);
-
-
         //resultado do banco de dados e uma condicional, se tiver informação retorna positivo e monta sobre o ID, caso não retorna not found
-
         return trip.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -59,10 +67,9 @@ public class TripController {
             return ResponseEntity.ok(rawTrip);
         }
 
-        //resultado do banco de dados e uma condicional, se tiver informação retorna positivo e monta sobre o ID, caso não retorna not found
-
         return ResponseEntity.notFound().build();
     }
+
 
     @GetMapping("/{id}/confirm")
     public ResponseEntity<Trip> confirmTrip(@PathVariable UUID id) {
@@ -83,6 +90,9 @@ public class TripController {
         return ResponseEntity.notFound().build();
     }
 
+
+
+    //PARTICIPANTES
 
     @PostMapping("/{id}/invite")
     public ResponseEntity<ParticipantCreateResponse> inviteParticipant(@PathVariable UUID id, @RequestBody ParticipantRequestPayload payload) {
@@ -112,6 +122,52 @@ public class TripController {
     }
 
 
+    // ATIVIDADES
 
 
+    @PostMapping("/{id}/activities")
+    public ResponseEntity<ActivityResponse> registerActivity(@PathVariable UUID id, @RequestBody ActivityRequestPayload payload) {
+        Optional<Trip> trip = this.repository.findById(id);
+
+        if (trip.isPresent()) {
+            Trip rawTrip = trip.get();
+
+            ActivityResponse activityResponse = this.activityService.registerActivity(payload, rawTrip);
+
+            return ResponseEntity.ok(activityResponse);
+
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/activities")
+    public ResponseEntity<List<ActivityData>> getAllActivities(@PathVariable UUID id) {
+        List<ActivityData> activityDataList = this.activityService.getAllActivitiesFromId(id);
+        return ResponseEntity.ok(activityDataList);
+    }
+
+
+    // LINKS
+
+    @PostMapping("/{id}/links")
+    public ResponseEntity<LinkResponse> registerLinks(@PathVariable UUID id, @RequestBody LinkRequestPayload payload) {
+        Optional<Trip> trip = this.repository.findById(id);
+
+        if (trip.isPresent()) {
+            Trip rawTrip = trip.get();
+
+            LinkResponse linkResponse = this.linkService.registerLink(payload, rawTrip);
+
+            return ResponseEntity.ok(linkResponse);
+        }
+
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/links")
+    public ResponseEntity<List<LinkData>> getAllLinks(@PathVariable UUID id) {
+        List<LinkData> linkDataList = this.linkService.getAllLinksFromId(id);
+        return ResponseEntity.ok(linkDataList);
+    }
 }
